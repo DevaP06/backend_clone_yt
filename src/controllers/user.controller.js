@@ -11,14 +11,14 @@ const registerUser = asyncHandler(async (req, res) => {
        throw new APIError(400, "All fields are required");
    }
 
-   const existedUser=User.findOne({
+   const existedUser=await User.findOne({
     $or: [{ email: email }, {username: username }]
    })
     if (existedUser) {
          throw new APIError(408, "User already exists");
     }
-   const avatarLocalPath=req.files?.avatar[0]?.path;
-    const coverImageLocalPath=req.files?.coverImage[0]?.path;
+   const avatarLocalPath=req.files?.avatar?.[0]?.path;
+    const coverImageLocalPath=req.files?.coverImage?.[0]?.path;
 
     const avatar=await uploadOnCLoudinary(avatarLocalPath);
     const coverImage=await uploadOnCLoudinary(coverImageLocalPath);
@@ -33,11 +33,11 @@ const registerUser = asyncHandler(async (req, res) => {
         email,
         fullName,
         password,
-        avatar: avatar.url,
-        coverImage: coverImage?.coverImage.url| "",
+        avatar: avatar.secure_url,
+        coverImage: coverImage?.secure_url|| "",
      })
     
-     const createdUser= await User.findById(User._id).select("-password -refreshToken");
+     const createdUser= await User.findById(user._id).select("-password -refreshToken");
      if(!createdUser) {
          throw new APIError(500, "Something went wrong while registering usser");
      }
