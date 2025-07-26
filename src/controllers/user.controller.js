@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler";
 import {APIError} from "../utils/apiError.js";
-import {user} from "../models/user.model.js";
+import {User} from "../models/user.models.js";
 import {uploadOnCLoudinary} from "../utils/cloudinary.js";
 import { APIResponse } from "../utils/APIResponse.js";
 
@@ -11,7 +11,7 @@ const registerUser = asyncHandler(async (req, res) => {
        throw new APIError(400, "All fields are required");
    }
 
-   const existedUser=user.findOne({
+   const existedUser=User.findOne({
     $or: [{ email: email }, {username: username }]
    })
     if (existedUser) {
@@ -28,7 +28,7 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new APIError(400, "Avatar upload failed");
 
     }
-     const user=await user.create({
+     const user=await User.create({
         username: username.toLowerCase(),
         email,
         fullName,
@@ -37,7 +37,7 @@ const registerUser = asyncHandler(async (req, res) => {
         coverImage: coverImage?.coverImage.url| "",
      })
     
-     const createdUser= await user.findById(user._id).select("-password -refreshToken");
+     const createdUser= await User.findById(User._id).select("-password -refreshToken");
      if(!createdUser) {
          throw new APIError(500, "Something went wrong while registering usser");
      }
