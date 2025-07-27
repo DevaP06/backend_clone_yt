@@ -1,5 +1,5 @@
 import asyncHandler from "express-async-handler";
-import {APIError} from "../utils/apiError.js";
+import {APIError} from "../utils/APIError.js";
 import {User} from "../models/user.models.js";
 import {uploadOnCLoudinary} from "../utils/cloudinary.js";
 import { APIResponse } from "../utils/APIResponse.js";
