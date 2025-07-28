@@ -3,7 +3,7 @@ import {APIError} from "../utils/APIError.js";
 import {User} from "../models/user.models.js";
 import {uploadOnCLoudinary} from "../utils/cloudinary.js";
 import { APIResponse } from "../utils/APIResponse.js";
-
+import jwt from "jsonwebtoken";
 
 
 
@@ -139,8 +139,34 @@ const logoutUser = asyncHandler(async(req,res)=> {
     return res.status(200).cookie("accessToken", "", options).cookie("refreshToken", "", options).json(new APIResponse(200, "User logged out successfully"));
 })
 
+
+const refreshAccesstoken=asyncHandler(async(req,res)=>{
+    const refreshToken = req.cookies?.refreshToken || req.header("Authorization")?.replace("Bearer ", "");
+    if (!refreshToken) {
+        throw new APIError(401, "Refresh token is required");
+    }
+
+    const decodedToken = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    if (!decodedToken) {
+        throw new APIError(401, "Invalid refresh token");
+    }
+
+    const user = await User.findById(decodedToken._id).select("-password -refreshToken");
+    if (!user) {
+        throw new APIError(404, "User not found");
+    }
+
+    const { accessToken } = await generateAccessRefreshToken(user._id);
+    
+    return res.status(200).json(new APIResponse(200, "Access token refreshed successfully", { accessToken }));
+
+})
+
+
+
 export { registerUser
 , loginUser
 ,logoutUser
+, refreshAccesstoken
 
 };
