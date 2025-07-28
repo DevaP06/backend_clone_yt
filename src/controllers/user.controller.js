@@ -8,18 +8,22 @@ import { APIResponse } from "../utils/APIResponse.js";
 
 
 const generateAccessRefreshToken = async(userId)=>{
+    let accessToken, refreshToken;
     try {
         const user = await User.findById(userId);
-        const accessToken = user.generateAccessToken();
-        const refreshToken = user.generateRefreshToken();
+        if (!user) {
+            throw new APIError("User not found for token generation", 404);
+        }
+        accessToken = user.generateAccessToken();
+        refreshToken = user.generateRefreshToken();
         user.refreshToken = refreshToken;
         await user.save({validateBeforeSave: false});
 
     } catch (error) {
         throw new APIError(500, "Error generating tokens");
     }
-    return { accessToken, refreshToken };
-}
+    return {accessToken, refreshToken };
+};
 
 const registerUser = asyncHandler(async (req, res) => {
     // Registration logic here
@@ -79,15 +83,17 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new APIError(400, "Username or Email and Password are required");
     }
 
+    const identifier = usernameOrEmail.trim().toLowerCase();
+
     const user=await User.findOne({
-        $or: [{ email: usernameOrEmail }, { username: usernameOrEmail.toLowerCase() }]
+        $or: [{ email: identifier }, { username: identifier }]
     })
 
     if(!user) {
         throw new APIError(404, "User not found");
     }
     const isPasswordMatch = await user.isPasswordCorrect(password);
-    if (!isPasswordMatch) {
+    if (!(isPasswordMatch)) {
         throw new APIError(401, "Invalid password");
     }
 
@@ -137,4 +143,4 @@ export { registerUser
 , loginUser
 ,logoutUser
 
- };
+};
