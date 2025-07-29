@@ -192,11 +192,89 @@ const getCurrentuser=asyncHandler(async(req,res)=>{
     return res.status(200).json(new APIResponse(200, "Current user fetched successfully", req.user));
 })
 
+
+const updateAccountDetails=asyncHandler(async(req,res)=>{
+    const {fullName,email}=req.body;
+    if(!fullName || !email) {
+        throw new APIError(400, "Full name and email are required");
+    }
+    const user=User.findByIdAndUpdate(req.user._id,
+        {
+            $set: {
+                fullName,
+                email
+            }
+        },
+        {
+            new: true,
+            runValidators: true
+        }
+    ).select("-password -refreshToken");
+    if(!user) {
+        throw new APIError(404, "User not found");
+    }
+    return res.status(200).json(new APIResponse(200, "Account details updated successfully", user));
+
+})
+
+
+const updatUserAvatar=asyncHandler(async(req,res)=>{
+    const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    if (!avatarLocalPath) {
+        throw new APIError(400, "Avatar is required");
+    }
+
+    const avatar = await uploadOnCLoudinary(avatarLocalPath);
+    if (!avatar) {
+        throw new APIError(400, "Avatar upload failed");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { avatar: avatar.secure_url } },
+        { new: true, runValidators: true }
+    ).select("-password -refreshToken");
+
+    if (!user) {
+        throw new APIError(404, "User not found");
+    }
+
+    return res.status(200).json(new APIResponse(200, "Avatar updated successfully", user));
+})
+
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+    const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
+    if (!coverImageLocalPath) {
+        throw new APIError(400, "Cover image is required");
+    }
+
+    const coverImage = await uploadOnCLoudinary(coverImageLocalPath);
+    if (!coverImage) {
+        throw new APIError(400, "Cover image upload failed");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { coverImage: coverImage.secure_url } },
+        { new: true, runValidators: true }
+    ).select("-password -refreshToken");
+
+    if (!user) {
+        throw new APIError(404, "User not found");
+    }
+
+    return res.status(200).json(new APIResponse(200, "Cover image updated successfully", user));
+})
+
+
 export { registerUser
 , loginUser
 ,logoutUser
 , refreshAccesstoken
 ,changeCurrentPassword
 ,getCurrentuser
+, updateAccountDetails
+,updatUserAvatar
+, updateUserCoverImage
 
 };
