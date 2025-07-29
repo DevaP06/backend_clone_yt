@@ -1,23 +1,20 @@
 import mongoose, { Types } from "mongoose";
-import jwt from "jsonwebtoken";
+
 
 
 const subscriptionSchema = new mongoose.Schema(
     {
         subscriber:{
             Types: Types.ObjectId,//one who is sbscribing
-            ref: 'User',
+            ref: 'User'
         },
         channel:{
             types: Types.ObjectId,//channel being subscribed to
-            ref: 'User',
+            ref: 'User'
         },
-    
-
-
     },
     {
-        timestamps: true,
+        timestamps: true
     }
 
 )
