@@ -4,6 +4,7 @@ import {User} from "../models/user.models.js";
 import {uploadOnCLoudinary} from "../utils/cloudinary.js";
 import { APIResponse } from "../utils/APIResponse.js";
 import jwt from "jsonwebtoken";
+import { deleteOldCloudinary } from "../utils/deleteoldcloudinary.js";
 
 
 
@@ -238,7 +239,7 @@ const updatUserAvatar=asyncHandler(async(req,res)=>{
     if (!user) {
         throw new APIError(404, "User not found");
     }
-
+    deleteOldCloudinary(req.user.avatar); // Delete old avatar from Cloudinary
     return res.status(200).json(new APIResponse(200, "Avatar updated successfully", user));
 })
 
@@ -262,7 +263,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     if (!user) {
         throw new APIError(404, "User not found");
     }
-
+    deleteOldCloudinary(req.user.coverImage); // Delete old cover image from Cloudinary
     return res.status(200).json(new APIResponse(200, "Cover image updated successfully", user));
 })
 
