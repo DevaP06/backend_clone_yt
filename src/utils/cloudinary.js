@@ -15,7 +15,7 @@ export const uploadOnCLoudinary = async (filePath) => {
         const result = await cloudinary.uploader.upload(filePath, {
             resource_type: "auto",
         });
-        console.log('Video uploaded successfully:', result.response_url);
+        console.log('Video uploaded successfully:', result.secure_url);
         fs.unlinkSync(filePath); // Delete the file after upload
         return result;
     } catch (error) {

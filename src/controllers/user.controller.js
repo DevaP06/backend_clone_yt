@@ -221,12 +221,15 @@ const updateAccountDetails=asyncHandler(async(req,res)=>{
 
 
 const updatUserAvatar=asyncHandler(async(req,res)=>{
-    const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    const avatarLocalPath = req.file?.path;
+
+    // console.log("req.file", req.file); // log this to terminal
     if (!avatarLocalPath) {
         throw new APIError(400, "Avatar is required");
     }
 
     const avatar = await uploadOnCLoudinary(avatarLocalPath);
+
     if (!avatar) {
         throw new APIError(400, "Avatar upload failed");
     }
@@ -245,7 +248,7 @@ const updatUserAvatar=asyncHandler(async(req,res)=>{
 })
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
-    const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
+    const coverImageLocalPath = req.file?.path;
     if (!coverImageLocalPath) {
         throw new APIError(400, "Cover image is required");
     }
@@ -269,58 +272,71 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 })
 
 
-const getUserChannelProfile=asyncHandler(async(req,res)=>{
-    const {username}=req.params;
-    if (!username) {
-        throw new APIError(400, "Username is missing");
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  if (!username) {
+    throw new APIError(400, "Username is missing");
+  }
 
-    }
-
-    User.aggregate([{
-        $match: {
-            username: username.toLowerCase()
-        }
-    },{
-        $lookup: {
-            from: "subscriptions",
-            localField: "_id",
-            foreignField: "channel",
-            as: "subscribers"
-        }
-    },{
-        $lookup: {
-            from: "subscriptions",
-            localField: "_id",
-            foreignField: "subscriber",
-            as: "subscribedTo"
-        }
-    },{
-        $addFields:{
-            subscribersCount: { $size: "$subscribers" },
-            subscribedToCount: { $size: "$subscribedTo" }
+  const result = await User.aggregate([
+    {
+      $match: {
+        username: username.toLowerCase(),
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: { $size: "$subscribers" },
+        subscribedToCount: { $size: "$subscribedTo" },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
         },
-        isSubscribed:{
-            $cond:{
-                if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-                then: true,
-                else: false
-            }
-        }
-    },{
-        $project: {
-            _id: 1,
-            username: 1,
-            fullName: 1,
-            avatar: 1,
-            coverImage: 1,
-            subscribersCount: { $size: "$subscribers" },
-            videosCount: { $size: "$videos" },
-            isSubscribed: 1,
-            email: 1,
-        }
-    }])
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        username: 1,
+        fullName: 1,
+        avatar: 1,
+        coverImage: 1,
+        subscribersCount: 1,
+        subscribedToCount: 1,
+        isSubscribed: 1,
+        email: 1,
+      },
+    },
+  ]);
 
-})
+  if (!result || result.length === 0) {
+    throw new APIError(404, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(new APIResponse(200, "Channel profile fetched successfully", result[0]));
+});
+
 
 
 const getWatchHistory=asyncHandler(async(req,res)=>{
