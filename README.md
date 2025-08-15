@@ -52,6 +52,8 @@ JWT_SECRET=your_jwt_secret
 npm run dev
 
 
+You can test API endpoints in POSTMAN
+
 
 License
 
