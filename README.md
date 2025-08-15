@@ -35,16 +35,20 @@ git clone https://github.com/DevaP06/backend_clone_yt.git
 cd backend_clone_yt
 
 ### 2. Install dependencies
+```bash
 npm install
 
 
 ### 3. Create a .env file
+```bash
 PORT=5000
 MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/<database_name>?retryWrites=true&w=majority
 JWT_SECRET=your_jwt_secret
 
 
 ### 4. start the server
+```bash
+
 npm run dev
 
 
